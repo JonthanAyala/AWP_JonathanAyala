@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>¿Qué puedo hacer bro?</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .activity-card { margin-top: 1.5rem; }
+        .category-btns { flex-wrap: wrap; gap: 0.5rem; }
+        .category-btns .btn { min-width: 120px; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="text-center mb-4">¿Qué puedo hacer?</h1>
+        <div class="d-flex justify-content-center mb-3">
+            <button id="randomBtn" class="btn btn-primary btn-lg">Actividad Aleatoria</button>
+        </div>
+        <div class="d-flex justify-content-center category-btns mb-4">
+            <button class="btn btn-outline-secondary" data-category="education">Educación</button>
+            <button class="btn btn-outline-secondary" data-category="recreational">Recreativo</button>
+            <button class="btn btn-outline-secondary" data-category="social">Social</button>
+            <button class="btn btn-outline-secondary" data-category="charity">Caridad</button>
+            <button class="btn btn-outline-secondary" data-category="cooking">Cocina</button>
+            <button class="btn btn-outline-secondary" data-category="relaxation">Relajación</button>
+            <button class="btn btn-outline-secondary" data-category="busywork">Ocupacional</button>
+        </div>
+        <div id="activityResult"></div>
+    </div>
+
+    <script>
+    const activityResult = document.getElementById('activityResult');
+
+    function renderActivity(act) {
+        if (!act) {
+            activityResult.innerHTML = '<div class="alert alert-warning">No se encontró actividad.</div>';
+            return;
+        }
+        activityResult.innerHTML = `
+        <div class="card activity-card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">${act.activity}</h5>
+                <p class="card-text mb-1"><strong>Categoría:</strong> ${act.type}</p>
+                <p class="card-text mb-1"><strong>Participantes:</strong> ${act.participants}</p>
+                <p class="card-text mb-1"><strong>Duración:</strong> ${act.duration || 'No especificada'}</p>
+                <p class="card-text mb-1"><strong>Dificultad:</strong> ${act.accessibility || 'No especificada'}</p>
+                <p class="card-text mb-1"><strong>¿Apto para niños?:</strong> ${act.kidFriendly ? 'Sí' : 'No'}</p>
+                ${act.link ? `<a href="${act.link}" class="btn btn-link p-0" target="_blank">Más información</a>` : ''}
+            </div>
+        </div>`;
+    }
+
+    document.getElementById('randomBtn').onclick = async () => {
+        activityResult.innerHTML = '<div class="text-center">Cargando...</div>';
+        const res = await fetch('https://bored-api.appbrewery.com/random');
+        const data = await res.json();
+        renderActivity(data);
+    };
+
+    document.querySelectorAll('.category-btns .btn').forEach(btn => {
+        btn.onclick = async () => {
+            const cat = btn.getAttribute('data-category');
+            activityResult.innerHTML = '<div class="text-center">Cargando...</div>';
+            const res = await fetch(`https://bored-api.appbrewery.com/filter?type=${cat}`);
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+                // Mostrar una actividad aleatoria de la categoría
+                const act = data[Math.floor(Math.random() * data.length)];
+                renderActivity(act);
+            } else {
+                renderActivity(null);
+            }
+        };
+    });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
